@@ -2,37 +2,19 @@ package com.dzd.gnss2.Method;
 
 /**
  * Created by wuzida on 2019/5/13.
+ * Notification: there maybe is existing a problem that  the conversion between primitive type(double type operation)
+ * that it may generate a possible loss of precision. Float and double type are used to reduce storage space when
+ storing rather than keeping high accuracy, frequent conversion data type operation may lead related the result to a big error.
  */
-import android.location.GnssClock;
-import android.location.GnssMeasurement;
-import android.location.GnssStatus;
+
 import android.util.Log;
 
-import org.apache.commons.math3.linear.Array2DRowRealMatrix;
-import org.apache.commons.math3.linear.LUDecomposition;
-import org.apache.commons.math3.linear.RealMatrix;
-import org.apache.commons.math3.linear.DiagonalMatrix;
 
 
-import com.dzd.gnss2.Data.NavData.GpsNavData;
-import com.dzd.gnss2.Data.NavData.GpsNavL1CA;
-import com.dzd.gnss2.Data.NavData.NavData;
-import com.dzd.gnss2.Data.SatelliteData.SatelliteData;
-import com.dzd.gnss2.Data.SatelliteData.SatelliteMeasurementStatus;
-import com.dzd.gnss2.Other.Position;
-import com.dzd.gnss2.Other.PositionConfig;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-
-import Jama.Matrix;
 
 import static android.content.ContentValues.TAG;
-import static com.dzd.gnss2.Other.Constant.F;
-import static com.dzd.gnss2.Other.Constant.OMEGA_dot_e;
-import static com.dzd.gnss2.Other.Constant.mu;
-import static java.lang.Math.floor;
-import static org.ujmp.core.Matrix.transpose;
+
 
 public class DDKalmanFilterManager {
     private double Ac[][] = {{1,0},{0,1}};
@@ -80,7 +62,6 @@ public class DDKalmanFilterManager {
         public double[] stt_y = new double[2];
         public double[] stt_z  = new double[2];
         public double P[][] = new double[6][6];  //convirance
-
     };
     DDKalmanFilterManager(double[] x,double[] y, double[] z) //xyz contain the position and velocity of user
     {
@@ -95,7 +76,7 @@ public class DDKalmanFilterManager {
         Qw =MatrixBlock(Qp0,3);
     }
 
-    public void Update(int[] activeChannel,double[][] satpos,double[][] satpos_ref,double[] obs,double[] obs_ref, double[] transmitTime, PvtCalculator pvtCalculator, boolean pvtForecast_Succ, double[] doppSmooth, double[] doppSmooth_ref, double[] elfore,double[] azfore,double[]cn0)
+    public void Update(int[] activeChannel,double[][] satpos,double[][] satpos_ref,double[] obs,double[] obs_ref, PvtCalculator pvtCalculator,  double[] doppSmooth, double[] doppSmooth_ref, double[] elfore,double[] azfore,double[]cn0)
     {
         int  nmbOfSatellites = activeChannel.length;
         satpos_actv =  new double[3][nmbOfSatellites];
@@ -103,6 +84,8 @@ public class DDKalmanFilterManager {
         satpos_ref_actv =  new double[3][nmbOfSatellites];
         satvel_ref_actv=  new double[3][nmbOfSatellites];
         satpos_rot_corr =  new double[3][nmbOfSatellites]; //storing the sat positions after earth rotation corrections
+        deltaP = new double[nmbOfSatellites];
+        deltaP_ref = new double[nmbOfSatellites];
         obs_actv = new double[nmbOfSatellites];
         obs_ref_actv = new double[nmbOfSatellites];
         cn0_actv= new double[nmbOfSatellites];
@@ -110,29 +93,33 @@ public class DDKalmanFilterManager {
         el = new double[nmbOfSatellites];;
         //       double DOP= new double[5];
 
-        for(int i =0;i<=nmbOfSatellites;i++)
+        for(int i =0;i<nmbOfSatellites;i++)
         {
             // System.arraycopy(satpos_ref[i], 0, aa[i], 0, a[0].length);
             for(int j = 0;j<3;j++)
             {
-                satpos_actv[j][i] = satpos[j][activeChannel[i]];
-                satvel_actv[j][i]= satpos[j+3][activeChannel[i]];
-                satpos_ref_actv[j][i] = satpos_ref[j][activeChannel[i]];
-                satvel_ref_actv[j][i]= satpos_ref[j+3][activeChannel[i]];
+                satpos_actv[j][i] = satpos[j][activeChannel[i]-1];
+                satvel_actv[j][i]= satpos[j+3][activeChannel[i]-1];
+                satpos_ref_actv[j][i] = satpos_ref[j][activeChannel[i]-1];
+                satvel_ref_actv[j][i]= satpos_ref[j+3][activeChannel[i]-1];
             }
-            obs_actv[i] = obs[activeChannel[i]];
-            obs_ref_actv[i]=obs_ref[activeChannel[i]];
-            cn0_actv[i] = cn0[ activeChannel[i]];
-            el[i]   = elfore[activeChannel[i]];
-            az[i]   = azfore[activeChannel[i]];
+            deltaP[i]   = doppSmooth[activeChannel[i]-1];
+            deltaP_ref[i]   = doppSmooth_ref[activeChannel[i]-1];
+            obs_actv[i] = obs[activeChannel[i]-1];
+            obs_ref_actv[i]=obs_ref[activeChannel[i]-1];
+            cn0_actv[i] = cn0[ activeChannel[i]-1];
+            el[i]   = elfore[activeChannel[i]-1];
+            az[i]   = azfore[activeChannel[i]-1];
         }
         int max_el = find(el,1);
 
         PvtCalculator KalFilt =  pvtCalculator;
         nxtState_pos = new double[]{KalFilt.stt_x[0], KalFilt.stt_y[0], KalFilt.stt_z[0]};
         nxtState_vel = new double[]{KalFilt.stt_x[1], KalFilt.stt_y[1], KalFilt.stt_z[1]};
-
-        bur = nxtState_pos ;
+        bur= new double[3];
+        for(int i =0;i<bur.length;i++){
+            bur[i] =nxtState_pos[i] ;
+        }
         for (int i = 0;i<3;i++){
             nxtState_pos[i] = nxtState_pos[i] + pos_ref_xyz[i];
         }
@@ -186,7 +173,7 @@ public class DDKalmanFilterManager {
         obs_corr_actv = MinusArray(obs_actv,obs_ref_actv);
 
         double[]obs_corr_actv_DD = new double[nmbOfSatellites-1];
-        for(int i =1 ;i< (nmbOfSatellites);i++){
+        for(int i =0 ;i< (nmbOfSatellites);i++){
             if (i < max_el){
                 obs_corr_actv_DD[i] = obs_corr_actv[i] - obs_corr_actv[max_el];
             }else if(i > max_el){
@@ -194,7 +181,7 @@ public class DDKalmanFilterManager {
             }
         }
         H = new double[nmbOfSatellites][3];
-        H_DD = new double[nmbOfSatellites][3];
+        H_DD = new double[nmbOfSatellites-1][3];
         for(int i=0;i<nmbOfSatellites;i++)
         {
             H[i][0] = -sat2usr_mtrx[0][i]/rho_predict[i];  //Ir = H
@@ -212,18 +199,16 @@ public class DDKalmanFilterManager {
             }else if(i > max_el){
                 for(int j =0;j<3;j++)
                 {
-                    H_DD[i][0] = H[i][0] - H[max_el][0];
-                    H_DD[i][1] = H[i][1] - H[max_el][1];
-                    H_DD[i][2] = H[i][2] - H[max_el][2];
+                    H_DD[i-1][0] = H[i][0] - H[max_el][0];
+                    H_DD[i-1][1] = H[i][1] - H[max_el][1];
+                    H_DD[i-1][2] = H[i][2] - H[max_el][2];
                 }
             }
         }
-        deltaP = new double[nmbOfSatellites];
-        deltaP_ref =new double[nmbOfSatellites];
+
         deltaP_DD=new double[nmbOfSatellites];
         sat_vel_DD=new double[nmbOfSatellites];
-        deltaP   = CopyArray(doppSmooth);
-        deltaP_ref   = CopyArray(doppSmooth_ref);
+
         deltaP_DD = MinusArray(deltaP,deltaP_ref);
         double[][]temp = new double[3][nmbOfSatellites];
         temp =MinusArray(satvel_actv,satvel_ref_actv);
@@ -231,11 +216,11 @@ public class DDKalmanFilterManager {
         {
             for(int j =0;j<3;j++)
             {
-                sat_vel_DD[i]=H[i][j]*   temp[j][i]   ;
+                sat_vel_DD[i]+=H[i][j]*   temp[j][i]   ;
             }
         }
         double[]obs_vel_DD = new double[nmbOfSatellites-1];
-        for(int i =1 ;i< (nmbOfSatellites);i++)
+        for(int i =0 ;i< (nmbOfSatellites);i++)
         {
             if (i < max_el){
                 obs_vel_DD[i] =deltaP_DD[i]-deltaP_DD[max_el]+sat_vel_DD[i] -sat_vel_DD[max_el];
@@ -273,14 +258,10 @@ public class DDKalmanFilterManager {
             HK[n*2+1][5]  =  H_DD[n][2];
             //TODO:   R calculation method below  is dramatically wrong
             double[] temp1 = new double [2];
-            temp1 = EKF_R_Compute_new1( LLH[0], el[0], cn0_actv[0], Rv);
-            if(n%2 ==0)
-            {
-                Rdiag[n][n] = temp1[0];
-            }else
-            {
-                Rdiag[n][n] = temp1[1];
-            }
+            temp1 = EKF_R_Compute_new1( LLH[0], el[n], cn0_actv[n], Rv);
+
+            Rdiag[n*2][n*2] = temp1[0];
+            Rdiag[n*2+1][n*2+1] = temp1[1];
         }
         Pk = KalFilt.P;
         double[][] Kgain = new double[6][2*(nmbOfSatellites -1)];
@@ -434,7 +415,7 @@ public class DDKalmanFilterManager {
     {
 
         int n1 = array1.length;
-        int m1 = array1[1].length;
+        int m1 = array1[0].length;
         int m2 = 1;
         double[][] array3 = new double[n1*n ][m1*n];
 
@@ -444,19 +425,18 @@ public class DDKalmanFilterManager {
             {
                 for(int m =0;m<m1;m++)
                 {
-                    array3[j*n+i][j*n+m] = array1[i][m];
+                    array3[j*n1+i][j*m1+m] = array1[i][m];
                 }
 
             }
         }
-
-
         return array3;
     }
 
+
     public double[][]  MatrixTranspose(double[][] array1)
     {
-        double[][] A = new double[array1.length][array1[0].length];
+        double[][] A = new double[array1[0].length][array1.length];
         for (int i = 0; i < array1.length; i++)
             for (int j = 0; j < array1[0].length; j++)
                 A[j][i] = array1[i][j];
