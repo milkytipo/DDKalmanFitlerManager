@@ -23,27 +23,27 @@ Constructor, initialize the P and Qw.
 
 >`activeChannel   = new int[nmbOfSatellites]` // activeChannel array saves the prn of every GPS Satellite,nmbOfSatellites is the number of current valid satellites.
 
-`satpos  =new double[6][32]` // 6 rows reserve the sat position_xyz and velocity_xyz; 32 volumns reserve all the 32 prn;
+>`satpos  =new double[6][32]` // 6 rows reserve the sat position_xyz and velocity_xyz; 32 volumns reserve all the 32 prn;
 
-`satpos_ref = new double[6][32] `
+>`satpos_ref = new double[6][32] `
 
-`obs = new double[32]`//every 32 GPS satellite pseudorange, invalid satellite ele is zer
+>`obs = new double[32]`//every 32 GPS satellite pseudorange, invalid satellite ele is zer
 
-`double[] obs_ref = new double[32];`
+>`double[] obs_ref = new double[32];`
 
-`doppSmooth =new double[32]` // //every 32 GPS satellite doppler value, invalid satellite ele is zer
+>`doppSmooth =new double[32]` // //every 32 GPS satellite doppler value, invalid satellite ele is zer
 
-`doppSmooth_ref =new double[32]`
+>`doppSmooth_ref =new double[32]`
 
-`elfore = new double[32]` //every 32 GPS satellite elevation.invalid satellite ele is zero
+>`elfore = new double[32]` //every 32 GPS satellite elevation.invalid satellite ele is zero
 
-`azfore = new double[32]` //every 32 GPS satellite elevation.invalid satellite ele is zero
+>`azfore = new double[32]` //every 32 GPS satellite elevation.invalid satellite ele is zero
 
-`cn0 = new double[32]`//every 32 GPS satellite elevation.invalid satellite ele is zero
+>`cn0 = new double[32]`//every 32 GPS satellite elevation.invalid satellite ele is zero
 
-`PvtCalculator pvtCalculator`// memeber parameters are the Kalman state values.
+>`PvtCalculator pvtCalculator`// memeber parameters are the Kalman state values.
 
-public  class  PvtCalculator{
+>public  class  PvtCalculator{
 
 	public double[] stt_x  = new double[2];  //stt_*[0] refers the bur,namely baseline's length, stt_*[1] refers the velocity_xyz of user.
 
@@ -53,7 +53,7 @@ public  class  PvtCalculator{
 
 	public double P[][] = new double[6][6];  //saves the convirance of every state.
 
-};
+>};
 
 
 
