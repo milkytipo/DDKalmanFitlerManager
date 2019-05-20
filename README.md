@@ -45,13 +45,13 @@ Constructor, initialize the P and Qw.
 
 >public  class  PvtCalculator{
 
-	public double[] stt_x  = new double[2];  //stt_*[0] refers the bur,namely baseline's length, stt_*[1] refers the velocity_xyz of user.
+>	public double[] stt_x  = new double[2];  //stt_*[0] refers the bur,namely baseline's length, stt_*[1] refers the velocity_xyz of user.
 
-	public double[] stt_y = new double[2];
+>	public double[] stt_y = new double[2];
 
-	public double[] stt_z  = new double[2];
+>	public double[] stt_z  = new double[2];
 
-	public double P[][] = new double[6][6];  //saves the convirance of every state.
+>	public double P[][] = new double[6][6];  //saves the convirance of every state.
 
 >};
 
