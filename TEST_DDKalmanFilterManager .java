@@ -1,4 +1,3 @@
-package com.dzd.gnss2.Method;
 
 /**
  * Created by wuzida on 2019/5/13.
@@ -6,16 +5,6 @@ package com.dzd.gnss2.Method;
  * that it may generate a possible loss of precision. Float and double type are used to reduce storage space when
  storing rather than keeping high accuracy, frequent conversion data type operation may lead related the result to a big error.
  */
-
-import android.util.Log;
-
-
-
-
-
-import static android.content.ContentValues.TAG;
-
-
 public class DDKalmanFilterManager {
     private double Ac[][] = {{1,0},{0,1}};
     private static int Sp = 1;
@@ -37,7 +26,7 @@ public class DDKalmanFilterManager {
     private double obs_corr_actv[] ;
     private double[] deltaP_DD;
     private double[] sat_vel_DD;
-    private double[] bur= new double[3];;
+    private double[] bur = new double[3];
 
     private double transmitTime_actv[] ;
     private double satClkCorr_actv[][] ;
@@ -54,16 +43,16 @@ public class DDKalmanFilterManager {
     private double H_DD[][] ;
     public  static double[] pos_ref_xyz= {-2853445.926, 4667466.476, 3268291.272};
     public static double   C = 299792458;
-    public static double PI =3.14159265359;
-
+    public static double PI =3.141592653589793;
     //TODO:maybe such definitaion would cause unexpected trouble
-    public  class  PvtCalculator{
+    public  static class  PvtCalculator{
         public double[] stt_x  = new double[2];  //stt_* refer the bur,namely baseline's length
         public double[] stt_y = new double[2];
         public double[] stt_z  = new double[2];
         public double P[][] = new double[6][6];  //convirance
     };
-    DDKalmanFilterManager(double[] x,double[] y, double[] z) //xyz contain the position and velocity of user
+
+    public DDKalmanFilterManager(double[] x,double[] y, double[] z) //xyz contain the position and velocity of user
     {
         PvtCalculator pvtCalculator  = new PvtCalculator();
         pvtCalculator.stt_x[0] = x[0]-pos_ref_xyz[0];
@@ -73,7 +62,14 @@ public class DDKalmanFilterManager {
         pvtCalculator.stt_y[1] = y[1];
         pvtCalculator.stt_z[1] = z[2];
         pvtCalculator.P = MatrixBlock(Pxyz0,3);
-        Qw =MatrixBlock(Qp0,3);
+        this.Qw =MatrixBlock(Qp0,3);
+    }
+    public DDKalmanFilterManager() //JUST FOR TEST
+    {
+        PvtCalculator pvtCalculator  = new PvtCalculator();
+
+        pvtCalculator.P = MatrixBlock(Pxyz0,3);
+        this.Qw =MatrixBlock(Qp0,3);
     }
 
     public void Update(int[] activeChannel,double[][] satpos,double[][] satpos_ref,double[] obs,double[] obs_ref, PvtCalculator pvtCalculator,  double[] doppSmooth, double[] doppSmooth_ref, double[] elfore,double[] azfore,double[]cn0)
@@ -112,7 +108,6 @@ public class DDKalmanFilterManager {
             az[i]   = azfore[activeChannel[i]-1];
         }
         int max_el = find(el,1);
-
         PvtCalculator KalFilt =  pvtCalculator;
         nxtState_pos = new double[]{KalFilt.stt_x[0], KalFilt.stt_y[0], KalFilt.stt_z[0]};
         nxtState_vel = new double[]{KalFilt.stt_x[1], KalFilt.stt_y[1], KalFilt.stt_z[1]};
@@ -282,20 +277,27 @@ public class DDKalmanFilterManager {
         bur[1] = newState[2];
         bur[2] = newState[4];
         //TODO: to define which parameters should be return
+
+        // for(int i = 0;i<bur.length;i++){
+        //                        System.out.println("i="+i+"  origin Function= "+ bur[i]);             
+        // }
     }
 
     public double[] getBur(PvtCalculator pvc){
         double[] temp2 = new double[3];
 
-        temp2[0] = pvc.stt_x[0];
-        temp2[1] = pvc.stt_y[0];
-        temp2[2] = pvc.stt_z[0];
+            temp2[0] = pvc.stt_x[0];
+            temp2[1] = pvc.stt_y[0];
+            temp2[2] = pvc.stt_z[0];
 
-        return temp2;
+            return temp2;
     }
     public double[] getBur(){
-        return bur;
+        // System.out.println(bur[0]);
+            return bur;
     }
+
+
     public void Predict(PvtCalculator pvtCalculator)//TODO:timestamp is default
     {
         pvtCalculator.stt_x[0] = pvtCalculator.stt_x[0]+pvtCalculator.stt_x[1];
@@ -378,8 +380,7 @@ public class DDKalmanFilterManager {
         double[][] array3 = new double[n1 ][m2];
         if(m1 != n2)
         {
-            Log.d(TAG, "MatrixMultiply:DementionWrong ");
-        }else
+       }else
         {
             for(int i = 0;i<n1;i++)
             {
@@ -406,8 +407,7 @@ public class DDKalmanFilterManager {
         double[] array3 = new double[n1 ];
         if(m1 != n2)
         {
-            Log.d(TAG, "MatrixMultiply:DementionWrong ");
-        }else
+       }else
         {
             for(int i = 0;i<n1;i++)
             {
@@ -443,13 +443,14 @@ public class DDKalmanFilterManager {
         return array3;
     }
 
-
     public double[][]  MatrixTranspose(double[][] array1)
     {
         double[][] A = new double[array1[0].length][array1.length];
-        for (int i = 0; i < array1.length; i++)
-            for (int j = 0; j < array1[0].length; j++)
+        for (int i = 0; i < array1.length; i++){
+            for (int j = 0; j < array1[0].length; j++){
                 A[j][i] = array1[i][j];
+            }
+        }
         return A;
     }
     public double[][]  MatrixIdentify(int n)
@@ -539,8 +540,6 @@ public class DDKalmanFilterManager {
         for (int i = 0; i < num; i++) {
             total += nums[i];
         }
-
-//        System.out.println("total=" + total);
         return total;
     }
     /**
@@ -568,13 +567,13 @@ public class DDKalmanFilterManager {
     }
 
 
-    public double[]   ECEF2geo(double x,double y, double z)
+    public double[]   ECEF2geo(double x,double y, double z)  // the height calculation is a bit difference from matlab but no effect.
     {
 
    // Convert from ECEF cartesian coordinates to  latitude, longitude and height.  WGS-84
         double x2 = x *x;
         double y2 = y *y;
-        double z2 = z *y;
+        double z2 = z *z;
 
         double a = 6378137.0000 ;   //earth radius in meters
         double b = 6356752.3142;    // earth semiminor in meters
@@ -639,13 +638,11 @@ public class DDKalmanFilterManager {
         sigma_t = 0.12;
         double[] Rvec = new double[2];
         double sigma2_iono = sigma_v / (1 + Math.pow( Re*Math.sin((d2r*el_actv) )/ (Re+hI) ,2));
-        double sigma2_trop =Math.pow( Math.pow(sigma_t,2) * 1.001 ,2) / (0.002001 +     Math.pow( (Math.sin(d2r*el_actv)),2));
+        double sigma2_trop = Math.pow(sigma_t,2) * Math.pow(1.001 ,2) / (0.002001 +     Math.pow( (Math.sin(d2r*el_actv)),2));
 
         double cn0_lin = Math.pow(10,(cn0_actv/10));
         double sigma2_psr = Math.pow(cTc,2)* (Bn/cn0_lin/2) * (1 + 2/T/cn0_lin) + Rv0[0];
-//     sigma2_psr   = sqrt(cTc^2 * (Bn/cn0_lin/2) * (1 + 2/T/cn0_lin) + Rv0(1));
         double sigma2_psrdot=Math.pow( (cf0/T/2/PI),2) * (4*BL/cn0_lin * (1 + 1/T/cn0_lin)) + Rv0[1];
-
 //        if cn0_actv(2,n)  //this line origin purpose is to judge BDS or GPS
 //        double cn0_los2mp = cn0_actv - cn0_actv;
 //        double sigma2_mpratio = 10^(-1.1*(cn0_los2mp - 10)/10);
@@ -657,8 +654,170 @@ public class DDKalmanFilterManager {
     }
 
 
+    public static void main(String[] args) {
+        DDKalmanFilterManager A = new DDKalmanFilterManager();
+        int nmbOfSatellites =5;
+        int[] activeChannel   = new int[nmbOfSatellites]; // activeChannel array saves the prn of every GPS Satellite 
+
+        double[][] satpos  =new double[6][32] ;// 6 rows reserve the sat position_xyz and velocity_xyz; 32 volumns reserve all the 32 prn;
+        double[][] satpos_ref = new double[6][32] ;
+
+        double[] obs = new double[32];//every 32 GPS satellite pseudorange, invalid satellite ele is zer
+        double[] obs_ref = new double[32];
+
+        double[] doppSmooth =new double[32]; // //every 32 GPS satellite doppler value, invalid satellite ele is zer
+        double[] doppSmooth_ref =new double[32];
+
+        double[] elfore = new double[32]; //every 32 GPS satellite elevation.invalid satellite ele is zero
+        double[] azfore = new double[32]; //every 32 GPS satellite elevation.invalid satellite ele is zero
+        double[]cn0 = new double[32]; //every 32 GPS satellite elevation.invalid satellite ele is zero
+
+        PvtCalculator pvc = new PvtCalculator();
+        // 以下取matlab第九个loop的值 在kalmanPos_LOG里面
+        pvc.stt_x[0] =142.666079794193;
+        pvc.stt_x[1] =-0.918552094629031;
+        pvc.stt_y[0] =147.342708506158;
+        pvc.stt_y[1] =-0.343336683501094;
+        pvc.stt_z[0] =-113.957337514906;
+        pvc.stt_z[1] =0.408781147882364;
+        pvc.P[0][0] = 3.57139274266416;pvc.P[0][1] = 0.357833891077047;
+        pvc.P[1][0] = 0.357833891077047;pvc.P[1][1] = 0.583693644032989;
+
+        pvc.P[2][2] = 4.03560566100503;pvc.P[2][3] = 0.365795584604125;
+        pvc.P[3][3] = 0.365795584604125;pvc.P[3][4] = 0.584678501596958;
+
+        pvc.P[4][4] = 6.87951773763442;pvc.P[4][5] = 0.522202696919255;
+        pvc.P[5][4] = 0.522202696919255;pvc.P[5][5] = 0.677924484233650;
+
+        activeChannel[0] = 10;
+        activeChannel[1] = 12;
+        activeChannel[2] = 14;
+        activeChannel[3] = 20;
+        activeChannel[4] = 24;
+
+        elfore[activeChannel[0]-1] = 73.7625208523695;
+        elfore[activeChannel[1]-1] = 39.2206528131214;
+        elfore[activeChannel[2]-1] = 31.1380302421402;
+        elfore[activeChannel[3]-1] = 50.3160322717088;
+        elfore[activeChannel[4]-1] = 17.4308330569214;
+
+        azfore[activeChannel[0]-1] = 232.359978068975;
+        azfore[activeChannel[1]-1] = 58.7483580945080;
+        azfore[activeChannel[2]-1] = 307.925855479008;
+        azfore[activeChannel[3]-1] = 179.578154780576;
+        azfore[activeChannel[4]-1] = 52.3870389691604;
+
+        doppSmooth[activeChannel[0]-1] = 43.4691642646761;
+        doppSmooth[activeChannel[1]-1] = 247.210890919701;
+        doppSmooth[activeChannel[2]-1] = -447.471385124554;
+        doppSmooth[activeChannel[3]-1] = 441.172093673909;
+        doppSmooth[activeChannel[4]-1] = 521.384302044530;
+
+        doppSmooth_ref[activeChannel[0]-1] = 89.8802687108149;
+        doppSmooth_ref[activeChannel[1]-1] = 294.941111105679;
+        doppSmooth_ref[activeChannel[2]-1] = -401.642389023505;
+        doppSmooth_ref[activeChannel[3]-1] = 487.377110072407;
+        doppSmooth_ref[activeChannel[4]-1] = 569.584737895992;
+
+        obs[activeChannel[0]-1] = 20253750.6200000;
+        obs[activeChannel[1]-1] = 21805007.2080000;
+        obs[activeChannel[2]-1] = 23018180.0460000;
+        obs[activeChannel[3]-1] = 21106270.1330000;
+        obs[activeChannel[4]-1] = 23978486.3390000;
+
+        obs_ref[activeChannel[0]-1] = 20254118.8910000;
+        obs_ref[activeChannel[1]-1] = 21805141.2810000;
+        obs_ref[activeChannel[2]-1] = 23018560.1560000;
+        obs_ref[activeChannel[3]-1] = 21106659.7730000;
+        obs_ref[activeChannel[4]-1] = 23978574.8830000;
+
+
+        satpos[0][activeChannel[0]-1] =-8661379.76080410;
+        satpos[1][activeChannel[0]-1] =22760331.6193311;
+        satpos[2][activeChannel[0]-1] =10436610.4446874;
+        satpos[3][activeChannel[0]-1] =-1021.21588229509;
+        satpos[4][activeChannel[0]-1] =882.000655558191;
+        satpos[5][activeChannel[0]-1] =-2798.56859505564;
+
+        satpos[0][activeChannel[1]-1] =-19009036.2901217;
+        satpos[1][activeChannel[1]-1] =3287133.31467227;
+        satpos[2][activeChannel[1]-1] =17986157.6381967;
+        satpos[3][activeChannel[1]-1] =1458.68218530203;
+        satpos[4][activeChannel[1]-1] =-1813.04372578464;
+        satpos[5][activeChannel[1]-1] =1870.14878984547;
+
+        satpos[0][activeChannel[2]-1] =8349700.40466628;
+        satpos[1][activeChannel[2]-1] =16074829.7704544;
+        satpos[2][activeChannel[2]-1] =19787086.8452291;
+        satpos[3][activeChannel[2]-1] =-2404.46016697464;
+        satpos[4][activeChannel[2]-1] =-436.853256066700;
+        satpos[5][activeChannel[2]-1] =1373.63144723353;
+
+        satpos[0][activeChannel[3]-1] =-13924621.2610703;
+        satpos[1][activeChannel[3]-1] =22551058.3861175;
+        satpos[2][activeChannel[3]-1] =163336.039620139;
+        satpos[3][activeChannel[3]-1] =-349.822180974318;
+        satpos[4][activeChannel[3]-1] =-176.941770291960;
+        satpos[5][activeChannel[3]-1] =-3110.16856309030;
+
+        satpos[0][activeChannel[4]-1] =-17711421.2111442;
+        satpos[1][activeChannel[4]-1] =-5730945.86273570;
+        satpos[2][activeChannel[4]-1] =18930294.2474725;
+        satpos[3][activeChannel[4]-1] =-857.567696953741;
+        satpos[4][activeChannel[4]-1] =-2274.54740874787;
+        satpos[5][activeChannel[4]-1] =-1451.98201510106;
+
+        satpos_ref[0][activeChannel[0]-1] =-8661380.05028981;
+        satpos_ref[1][activeChannel[0]-1] =22760331.8693532;
+        satpos_ref[2][activeChannel[0]-1] =10436609.6513727;
+        satpos_ref[3][activeChannel[0]-1] =-1021.21580626605;
+        satpos_ref[4][activeChannel[0]-1] =882.000593807528;
+        satpos_ref[5][activeChannel[0]-1] =-2798.56865847453;
+
+        satpos_ref[0][activeChannel[1]-1] =-19009035.8754872;
+        satpos_ref[1][activeChannel[1]-1] =3287132.79930954;
+        satpos_ref[2][activeChannel[1]-1] =17986158.1697917;
+        satpos_ref[3][activeChannel[1]-1] =1458.68219877868;
+        satpos_ref[4][activeChannel[1]-1] =-1813.04380158420;
+        satpos_ref[5][activeChannel[1]-1] =1870.14867876847;
+
+        satpos_ref[0][activeChannel[2]-1] =8349699.72316517;
+        satpos_ref[1][activeChannel[2]-1] =16074829.6466362;
+        satpos_ref[2][activeChannel[2]-1] =19787087.2345603;
+        satpos_ref[3][activeChannel[2]-1] =-2404.46022130307;
+        satpos_ref[4][activeChannel[2]-1] =-436.853226503515;
+        satpos_ref[5][activeChannel[2]-1] =1373.63133143499;
+
+        satpos_ref[0][activeChannel[3]-1] =-13924621.3602100;
+        satpos_ref[1][activeChannel[3]-1] =22551058.3359722;
+        satpos_ref[2][activeChannel[3]-1] =163335.158197448;
+        satpos_ref[3][activeChannel[3]-1] =-349.822124779304;
+        satpos_ref[4][activeChannel[3]-1] =-176.941858685987;
+        satpos_ref[5][activeChannel[3]-1] =-3110.16856408179;
+
+        satpos_ref[0][activeChannel[4]-1] =-17711421.4550405;
+        satpos_ref[1][activeChannel[4]-1] =-5730946.50962752;
+        satpos_ref[2][activeChannel[4]-1] =18930293.8345220;
+        satpos_ref[3][activeChannel[4]-1] =-857.567710813928;
+        satpos_ref[4][activeChannel[4]-1] =-2274.54734713549;
+        satpos_ref[5][activeChannel[4]-1] =-1451.98212977508;
+
+        cn0[activeChannel[0]-1] = 38.6750000000000;
+        cn0[activeChannel[1]-1] = 35.6590000000000;
+        cn0[activeChannel[2]-1] = 35.5060000000000;
+        cn0[activeChannel[3]-1] = 34.0960000000000;
+        cn0[activeChannel[4]-1] = 22.1230000000000;
+        double[] e  = new double[3];
+        e = A.getBur(pvc);
+        A.Predict(pvc);
+        A.Update(activeChannel,satpos, satpos_ref, obs,obs_ref, pvc,  doppSmooth,doppSmooth_ref, elfore,azfore,cn0);
+        e = A.getBur();
+        for(int i=0; i<3;i++){
+            System.out.println("bur="+e[i]);
+        }
+    }
 
 
 
-
+ 
 }
