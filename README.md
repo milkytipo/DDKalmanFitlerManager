@@ -14,13 +14,18 @@ Here I provide a class set to realize the real-time GNSS pseudorange double diff
 ## Function and parameter illustration
 
 Their are three primary method
-* 1.`DDKalmanFilterManager()`
+* 1. `DDKalmanFilterManager()`
+
 Constructor, initialize the P and Qw.
+
+
 * 2. `Update(int[] activeChannel,double[][] satpos,double[][] satpos_ref,double[] obs,double[] obs_ref, PvtCalculator pvtCalculator,  double[] doppSmooth, double[] doppSmooth_ref, double[] elfore,double[] azfore,double[]cn0)`
 
 `activeChannel   = new int[nmbOfSatellites]` // activeChannel array saves the prn of every GPS Satellite,nmbOfSatellites is the number of current valid satellites.
 
-`satpos  =new double[6][32]` // 6 rows reserve the sat position_xyz and velocity_xyz; 32 volumns reserve all the 32 prn;`satpos_ref = new double[6][32] `
+`satpos  =new double[6][32]` // 6 rows reserve the sat position_xyz and velocity_xyz; 32 volumns reserve all the 32 prn;
+
+`satpos_ref = new double[6][32] `
 
 `obs = new double[32]`//every 32 GPS satellite pseudorange, invalid satellite ele is zer
 
@@ -50,8 +55,14 @@ public  class  PvtCalculator{
 
 };
 
+
+
 * 3. `Predict(PvtCalculator pvc)`
+
 pvc is a declared object,contains position xyz and velocity xyz and P&Qw in Kalman.
+
+
 * 4. `getBur()` or `getBur(PvtCalculator pvc)`
+
 return the bur xyz.
 
